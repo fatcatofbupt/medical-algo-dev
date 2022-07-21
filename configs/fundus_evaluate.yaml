@@ -1,0 +1,19 @@
+model:
+  name: model_fundus_binary
+  params: 
+    path: models/jit_fundus_448.pth
+    device: cpu
+    output_type: logits
+    threshold: 0.5
+    multi2binary_indices:
+      - 1
+      - 2
+      - 3
+      - 4
+dataset:
+    name: dataset_fundus_binary
+    params:
+      root_dir: datasets/fundus/
+      resize: 448
+  
+script: datasets/binary_criteria.py

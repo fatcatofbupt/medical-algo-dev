@@ -1,0 +1,20 @@
+model:
+  name: binary_classification_image_pytorch
+  params: 
+    path: model/jit_module_448_cpu.pth
+    device: cpu
+    output_type: logits
+    threshold: 0.5
+    multi2binary_indices:
+      - 1
+      - 2
+      - 3
+      - 4
+dataset:
+    name: binary_classification_image_obs
+    params:
+      root_dir: dataset/fundus/
+      data_len: 20
+      resize: 448
+  
+script: test/binary_criteria.py

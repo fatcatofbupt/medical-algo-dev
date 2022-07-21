@@ -1,0 +1,19 @@
+model:
+  name: model_lungssd_basic
+  params: 
+    path: models/lung_ssd_jit.pth
+    # 模型参数路径变了
+    size: 300
+    # 新增size,为模型的输入尺寸
+    num_classes: 2
+    # 新增num_classes，为模型的目标检测数目加一
+    device: 'cpu'
+    # 'threshold'舍弃
+
+dataset:
+  name: dataset_lungssd_basic
+  params:
+    root_dir: datasets/test_dataset_lung_ssd_1
+    # 测试数据集的名称变了
+    resize: 300
+script: datasets/lungssd_criteria.py

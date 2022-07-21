@@ -1,0 +1,19 @@
+{
+    "model": {
+        "name": "model_lungssd_basic",
+        "params": {
+            "path": "model/rc-upload-1641538858263-5-lung_ssd_jit.pth",
+            "device": "cpu",
+            "size": 300,
+            "num_classes": 2
+        }
+    },
+    "dataset": {
+        "name": "dataset_lungssd_basic",
+        "params": {
+            "root_dir": "dataset/rc-upload-1641538321222-2-test_dataset_lung_ssd_1.zip",
+            "resize": 300
+        }
+    },
+    "script": "datasets/lungssd_criteria.py"
+}

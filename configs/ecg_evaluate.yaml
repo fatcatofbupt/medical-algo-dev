@@ -1,0 +1,12 @@
+model:
+  name: model_ecg_classifiction
+  params: 
+    path: models/ecg/ecg_jit.pth
+    device: 'cpu'
+
+dataset:
+  name: dataset_ecg_classifiction
+  params:
+    root_dir: datasets/ecg_data
+
+script: datasets/ecg_criteria.py
