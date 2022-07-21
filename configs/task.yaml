@@ -1,0 +1,30 @@
+model:
+  name: binary_classification_image_pytorch
+  params: 
+    path: model/jit_module_448_cpu.pth
+    device: cpu
+    output_type: logits
+    threshold: 0.5
+    multi2binary_indices:
+      - 1
+      - 2
+      - 3
+      - 4
+dataset:
+  name: binary_classification_image_obs
+  params:
+    root_dir: dataset/fundus/
+    data_len: 10
+    resize: 448
+
+newdata_evals:
+  -
+    newdata_eval_name: image_ssim
+    newdata_eval_params: {}
+
+algorithm:
+  tests: 
+  -
+    name: fundus_image_adv_pgd_pytorch
+    params: 
+      adv_level: -1

@@ -1,0 +1,6 @@
+*.pyc
+*/**.DS_Store
+*tmp*
+/test_zip.py
+/models
+/something_no_need_to_git

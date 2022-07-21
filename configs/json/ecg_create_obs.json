@@ -1,0 +1,32 @@
+{
+    "model": {
+        "name": "model_ecg_classifiction",
+        "params": {
+            "path": "model/rc-upload-1641793290982-6-ecg_jit.pth",
+            "device": "cpu"
+        }
+    },
+    "dataset": {
+        "name": "dataset_ecg_classifiction",
+        "params": {
+            "root_dir": "dataset/rc-upload-1641793290982-2-ecg_data.zip"
+        }
+    },
+    "newdata_evals": [
+        {
+            "newdata_eval_name": "eval_ecg",
+            "newdata_eval_params": {}
+        }
+    ],
+    "algorithm": {
+        "tests": [
+            {
+                "name": "algorithm_ecg_adv",
+                "params": {
+                    "attack_types": "pgd_conv",
+                    "num_steps": 1
+                }
+            }
+        ]
+    }
+}
