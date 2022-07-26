@@ -66,8 +66,8 @@ def cal_acc(logits,label):
     return acc_result
 
 
-@TestFactory.register('algorithm_clinical')
-class Attack_Clinical(object):
+@TestFactory.register('algorithm_clinical_generalize')
+class Attack_Clinical_Generalize(object):
     params = {
 
     }
@@ -82,11 +82,12 @@ class Attack_Clinical(object):
                 word_neighbor_path=None, 
                 concept_path=None, 
                 label_num=20, 
-                output_dim=20
+                output_dim=20, 
+                instance_num = 5
                 ):
-        super(Attack_Clinical, self).__init__()
+        super(Attack_Clinical_Generalize, self).__init__()
         self.attack_types = attack_types
-        self.attack_levels = attack_levels
+        # self.attack_levels = attack_levels
         self.w2v_path = w2v_path
         self.word2id_path = word2id_path
         self.id2word_path = id2word_path
@@ -100,10 +101,11 @@ class Attack_Clinical(object):
         self.lam = 0.01
         self.k = 20
         self.max_len = 512
-        self.task = self.attack_levels
+        # self.task = self.attack_levels
         self.gen_result = True                     #gen answer
         self.label_num = 20 # label数目
         self.output_dim = 20
+        self.instance_num = instance_num
         self.embedding1 = nn.Embedding.from_pretrained(
                             embeddings=torch.from_numpy(self.w2v),
                             freeze = True
@@ -126,9 +128,6 @@ class Attack_Clinical(object):
         fail = 0
         instance_num = 500
         # lam是Perturbation Distance Score的权重
-        # NOTE:model即从attack_demo.py传过来的self.model
-        #model.eval()   #这句话不加坑死我了
-        # model.train()
         out_data = {}
 
         candidate_max_num = 200
@@ -139,7 +138,7 @@ class Attack_Clinical(object):
         data = note
         data = self.process([data])
         text_length = data["length"]
-        target_label = Variable(1 - data["label"]).cuda().float().cpu()
+        target_label = Variable(torch.zeros(data["label"].shape)).cuda().float().cpu()
         label = Variable(data["label"]).cuda().float().cpu()
         input_seq = data["input"][0].numpy().tolist()
         property_seq = data["property"][0].tolist()
@@ -148,7 +147,10 @@ class Attack_Clinical(object):
         iter_num = 0
         iter_L2_sum = 0
         raw_seq, mutable_raw_seq = data["rawtext"][0], data["rawtext"][0]
-        # 跳转到这里
+        # 这里跑一个原始结果保存,用于后续对比
+        input_embed_ = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).cuda().long().cpu()).requires_grad_(True)
+        result_ = model.predict(data = {'input':input_embed_, "label": label})
+        raw_logits, raw_prediction = result_["logits"], result_["prediction"].long()
         while True:
             iter_num += 1
             if iter_num >= 32:
@@ -161,7 +163,8 @@ class Attack_Clinical(object):
             input_embed = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).cuda().long().cpu()).requires_grad_(True)
             result = model.predict(data = {'input':input_embed, "label": label})
             old_logits, prediction = result["logits"], result["prediction"].long() # prob, pred
-            if self.check_leave(prediction, label, self.task):
+            print("iter_num", iter_num)
+            if self.check_leave(prediction, label):
                 #完成全部修改，出口一
                 #print("exit #1")
                 success = 1
@@ -338,7 +341,7 @@ class Attack_Clinical(object):
                 ret += word
             return ret
         out_data = {
-                # "id": dataset_idx, 
+                # "id": dataset_idx,                             #表示是第几个
                 "label_num": self.label_num, 
                 "raw_seq": list2str(raw_seq),
                 "adv_seq": list2str(mutable_raw_seq),
@@ -346,7 +349,11 @@ class Attack_Clinical(object):
                 "adv_label": output["prediction"].long().cpu().numpy().tolist(),
                 "L2_loss": iter_L2_sum,
                 "Perturbation_num": float(iter_num / text_length[0]),
-                "fail": int(fail)
+                "fail": int(fail), 
+                # 更新，保存下面参数用于泛化性能评估
+                "raw_logits": raw_logits.detach().cpu().numpy().tolist(), 
+                "raw_prediction": raw_prediction.cpu().numpy().tolist(), 
+                "adv_logits": output['logits'].detach().cpu().numpy().tolist(), 
             }
         out_data['F1'] = F1
         new_meta = meta.copy()
@@ -389,12 +396,13 @@ class Attack_Clinical(object):
         avg_vec = np.mean(np.array(avg_vec), axis=0)
         return avg_vec
 
-    def check_leave(self, prediction, label, task):
+    def check_leave(self, prediction, label):
         prediction = prediction.squeeze().detach().cpu().numpy()
-        label = label.squeeze().detach().cpu().numpy()
-        #print(prediction)
-        #print(label)
-        if np.sum(prediction != label) >= task:
+        label = label.squeeze().detach().cpu().numpy().astype(int)
+        zeros = np.zeros(label.shape)
+        print("pred: ", prediction)
+        print("label", label)
+        if np.sum(prediction != zeros) == 0:
             return True
         else:
             return False

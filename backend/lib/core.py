@@ -391,7 +391,7 @@ if __name__ == '__main__':
     parser.add_argument('--evaluate_path',default='',help='The input parameters of image evaluation')
     args = parser.parse_args()
 
-    args.create_path = 'configs/ecg_create.yaml'
+    # args.create_path = 'configs/clinical_generalize.yaml'
     # args.create_path = 'configs/clinical_create.yaml'
     # args.evaluate_path = 'configs/clinical_evaluate.yaml'
     

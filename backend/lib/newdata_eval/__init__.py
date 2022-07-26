@@ -6,3 +6,4 @@ from .eval_lungseg import *
 from .eval_lungssd import *
 from .eval_ecg import *
 from .eval_clinical import *
+from .eval_clinical_generalize import *
