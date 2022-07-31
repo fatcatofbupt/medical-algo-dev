@@ -89,21 +89,9 @@ class ClinicalLstmBasic(nn.Module):
         # 设备默认cpu
         self.device = device
 
-        # self.w2v_path = '/data/sjy21/old_data/pot/dict/w2v.npy'
-        # self.w2v = np.load(self.w2v_path)
-        # # embedding
-        # self.embedding1 = nn.Embedding.from_pretrained(
-        #             embeddings=torch.from_numpy(self.w2v),
-        #             freeze = True
-        #             ).cuda()
 
-    # def forword(self,data):
-    #     result = self.model(data)
-    #     return result
 
     def predict(self, data):
-        # input_embed = self.embedding1.cuda()(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).cuda().long()).requires_grad_(True)
-        # label = Variable(label).cuda().float()
         result = self.model(data)
 
         return result

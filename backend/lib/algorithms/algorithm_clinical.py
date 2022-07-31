@@ -139,8 +139,8 @@ class Attack_Clinical(object):
         data = note
         data = self.process([data])
         text_length = data["length"]
-        target_label = Variable(1 - data["label"]).cuda().float().cpu()
-        label = Variable(data["label"]).cuda().float().cpu()
+        target_label = Variable(1 - data["label"]).float().cpu()
+        label = Variable(data["label"]).float().cpu()
         input_seq = data["input"][0].numpy().tolist()
         property_seq = data["property"][0].tolist()
         medical_pos = data["medical_pos"][0]
@@ -158,7 +158,7 @@ class Attack_Clinical(object):
             #localize k candidates
             #if len(input_seq) == 0:
             #    print("shit #1")
-            input_embed = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).cuda().long().cpu()).requires_grad_(True)
+            input_embed = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).long().cpu()).requires_grad_(True)
             result = model.predict(data = {'input':input_embed, "label": label})
             old_logits, prediction = result["logits"], result["prediction"].long() # prob, pred
             if self.check_leave(prediction, label, self.task):
@@ -257,7 +257,7 @@ class Attack_Clinical(object):
                 break
             if len(candidate_input) > candidate_max_num:         #取前200个candidate
                 candidate_input = candidate_input[:candidate_max_num]
-            candidate_input = Variable(torch.from_numpy(np.array(candidate_input))).cuda().long().cpu()
+            candidate_input = Variable(torch.from_numpy(np.array(candidate_input))).long().cpu()
             candidate_embed = self.embedding1(candidate_input)
             logits = model.predict(data = {"input": candidate_embed, "label": label})["logits"]
             candidate_loss = self.calc_loss(logits, target_label).detach().cpu().numpy()
@@ -324,7 +324,7 @@ class Attack_Clinical(object):
             
         #print("finish one data!")
         #再跑一个最终结果
-        input_embed = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).cuda().long().cpu()).requires_grad_(True)
+        input_embed = self.embedding1(Variable(torch.from_numpy(np.array(input_seq)).unsqueeze(0)).long().cpu()).requires_grad_(True)
         output = model.predict(data = {"input": input_embed, "label": label})
         temp_F1 = cal_acc(logits=output['logits'], label=label)
         for a in range(self.label_num):
@@ -399,30 +399,30 @@ class Attack_Clinical(object):
         else:
             return False
 
-    def black_box(self, model, input_seq, k, label):
-        #black-box candidate selection
-        top_k = []
-        now_seq = input_seq
-        while len(top_k < k):
-            left, right = 0, len(input_seq)
-            origin_result = model({"input": Variable(torch.from_numpy(np.array(now_seq))).cuda()})
-            score_origin = self.calc_loss(origin_result["logits"], label).detach().cpu().numpy()
-            del origin_result
-            while left != right:
-                mid = int((left + right)/ 2)
-                x_left = self.mask(now_seq, left, mid)
-                x_right = self.mask(now_seq, mid+1, right)
-                result = model({"input": Variable(torch.from_numpy(np.array([x_left, x_right]))).cuda()})
-                logits = result["logits"]
-                score_left, score_right = self.calc_loss(logits[0], label).detach().cpu().numpy(), self.calc_loss(logits[1], label).detach().cpu().numpy()
-                del result, logits
-                if abs(score_left - score_origin) > abs(score_right - score_origin):
-                    right = mid
-                else:
-                    left = mid + 1
-            top_k.append(left)
-            now_seq[left] = 0
-        return top_k
+    # def black_box(self, model, input_seq, k, label):
+    #     #black-box candidate selection
+    #     top_k = []
+    #     now_seq = input_seq
+    #     while len(top_k < k):
+    #         left, right = 0, len(input_seq)
+    #         origin_result = model({"input": Variable(torch.from_numpy(np.array(now_seq))).cuda()})
+    #         score_origin = self.calc_loss(origin_result["logits"], label).detach().cpu().numpy()
+    #         del origin_result
+    #         while left != right:
+    #             mid = int((left + right)/ 2)
+    #             x_left = self.mask(now_seq, left, mid)
+    #             x_right = self.mask(now_seq, mid+1, right)
+    #             result = model({"input": Variable(torch.from_numpy(np.array([x_left, x_right]))).cuda()})
+    #             logits = result["logits"]
+    #             score_left, score_right = self.calc_loss(logits[0], label).detach().cpu().numpy(), self.calc_loss(logits[1], label).detach().cpu().numpy()
+    #             del result, logits
+    #             if abs(score_left - score_origin) > abs(score_right - score_origin):
+    #                 right = mid
+    #             else:
+    #                 left = mid + 1
+    #         top_k.append(left)
+    #         now_seq[left] = 0
+    #     return top_k
 
 
     def mask(self, input_seq, begin, end):
@@ -434,7 +434,7 @@ class Attack_Clinical(object):
         success_num = 0
         data = json.load(open(data_dir, "r"))
         for item in data:
-            prediction = model({"input": Variable(torch.from_numpy(np.array(item["input"]))).cuda()})["prediction"].detach().cpu().numpy()
+            prediction = model({"input": Variable(torch.from_numpy(np.array(item["input"])))})["prediction"].detach().cpu().numpy()
             if np.sum(np.array(item["label"]) != prediction) >= 3:
                 success_num += 1
         print("success:", success_num)
